@@ -1,0 +1,52 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "termcs"
+version = "0.0.1"
+authors = [{ name="Riyum" }]
+description = "Terminal crypto screener"
+requires-python = ">=3.7"
+readme = "README.md"
+license = {file = 'LICENSE.txt'}
+classifiers = [
+    "Environment :: Console",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: MacOS",
+    "Operating System :: POSIX :: Linux",
+    "License :: OSI Approved :: MIT License",
+    ]
+dependencies = [
+    "textual >= 0.7.0",
+    "binance-connector",
+]
+
+[project.scripts]
+termcs = "termcs:run"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["termcs"]
+
+[tool.setuptools.package-data]
+termcs = ["*.css"]
+
+[project.urls]
+"Homepage" = "https://github.com/Riyum/termcs"
+"Bug Tracker" = "https://github.com/Riyum/termcs/issues"
+
+[tool.black]
+target-version = ['py37']
+
+[tool.pyright]
+include = ["src"]
+exclude = ["**/__pycache__"]
+reportMissingTypeStubs = false
+pythonVersion = "3.7"
+pythonPlatform = "Linux"

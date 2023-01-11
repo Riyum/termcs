@@ -1,0 +1,92 @@
+Screen {
+    layout: vertical;
+    background: $background;
+}
+
+TopWidget {
+    background: $background-lighten-1;
+    color: $text;
+    height: 1;
+    dock: top;
+}
+
+TopWidget #icon {
+    dock: left;
+    padding: 0 1;
+    width: 8;
+    content-align: left middle;
+}
+
+TopWidget #app-title {
+    content-align: center middle;
+    width: 100%;
+}
+
+Clock {
+    dock: right;
+    width: 10;
+    padding: 0 1;
+
+    background: $background-lighten-2;
+    color: $text;
+    text-opacity: 85%;
+    content-align: center middle;
+}
+
+TableData{
+    height: auto;
+}
+
+ChangeTable {
+    align: center middle;
+    text-opacity: 85%;
+    height: auto;
+}
+
+BottomWidget {
+    dock: bottom;
+    color: $text;
+    height: 1;
+}
+
+BottomWidget #dummy_button{
+    display: none;
+}
+
+BottomWidget #search_input{
+    border: none;
+}
+
+Footer {
+    background: $panel;
+    color: $text;
+    dock: bottom;
+    height: 1;
+}
+
+Footer > .footer--highlight {
+    background: $secondary-background-lighten-3;
+}
+
+Footer > .footer--highlight-key {
+    background: $secondary-background-lighten-1;
+    text-style: bold;
+}
+
+Footer > .footer--pressed {
+    background: $panel-lighten-3;
+}
+
+Footer > .footer--pressed-key {
+    text-style: bold;
+    background: $secondary-darken-1;
+}
+
+Footer > .footer--key {
+    text-style: bold;
+    background: $panel-lighten-1;
+}
+
+.hidden {
+    display: none;
+}
