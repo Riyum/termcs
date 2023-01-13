@@ -28,7 +28,7 @@
 </p>
 
 <p align="center">
-  <img align="center" src="https://github.com/Riyum/termcs/blob/master/imgs/demo.gif" />
+  <img align="center" src="https://raw.githubusercontent.com/Riyum/termcs/master/imgs/demo.gif" />
 </p>
 
 <details>
