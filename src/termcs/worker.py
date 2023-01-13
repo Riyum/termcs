@@ -87,7 +87,7 @@ class Worker:
         self.kill = False
         self.update_time = 0
         self.used_weight = 0
-        self.token_count = 0
+        self.asset_count = 0
         self.pair = Pair.BOTH
         self.buff = {}
         self.nan = []
@@ -124,7 +124,7 @@ class Worker:
         self.buff = {
             k: v
             for k, v in sorted(
-                self.buff.items(), key=lambda token: token[1]["change24"], reverse=True
+                self.buff.items(), key=lambda asset: asset[1]["change24"], reverse=True
             )
         }
 
@@ -177,11 +177,11 @@ class Worker:
 
         tmp = set()
 
-        for token in tickers:
+        for asset in tickers:
 
-            sym = token["symbol"]
-            name = token["symbol"][:-4]
-            vol = int(float(token["volume"]))
+            sym = asset["symbol"]
+            name = asset["symbol"][:-4]
+            vol = int(float(asset["volume"]))
 
             if not self.pattern.search(sym):
                 continue
@@ -191,37 +191,37 @@ class Worker:
                 continue
 
             if name in tmp:
-                suffix = token["symbol"][-4:]
+                suffix = asset["symbol"][-4:]
                 k = f"{name}USDT" if suffix == "BUSD" else f"{name}BUSD"
                 vol_b = self.buff[k]["volume"]
 
                 if vol > vol_b:
                     self.buff[sym] = self.buff.pop(k)
-                    self.addTokenToBuff(token)
+                    self.addAssetToBuff(asset)
             else:
                 tmp.add(name)
-                self.addTokenToBuff(token)
+                self.addAssetToBuff(asset)
 
         self.sortBuff()
 
-    def addTokenToBuff(self, token: dict) -> None:
-        """add/update token data"""
-        sym = token["symbol"]
-        vol = int(float(token["volume"]))
+    def addAssetToBuff(self, asset: dict) -> None:
+        """add/update asset data"""
+        sym = asset["symbol"]
+        vol = int(float(asset["volume"]))
 
         if vol == 0:
             self.nan.append(sym)
             return
 
-        price = float(token["lastPrice"])
-        low = float(token["lowPrice"])
-        high = float(token["highPrice"])
+        price = float(asset["lastPrice"])
+        low = float(asset["lowPrice"])
+        high = float(asset["highPrice"])
 
         self.buff[sym] = {
             "symbol": sym,
-            "token_name": token["symbol"][:-4],
+            "asset_name": asset["symbol"][:-4],
             "price": price,
-            "change24": float(token["priceChangePercent"]),
+            "change24": float(asset["priceChangePercent"]),
             "low": low,
             "high": high,
             "volume": vol,
@@ -231,13 +231,13 @@ class Worker:
 
     def updateLatestPrices(self, table: List[dict]) -> None:
         """update latest prices & high/low change"""
-        for token in table:
+        for asset in table:
 
-            sym = token["symbol"]
+            sym = asset["symbol"]
 
             if self.pattern.search(sym) and sym not in self.nan:
                 try:
-                    self.buff[sym]["price"] = float(token["price"])
+                    self.buff[sym]["price"] = float(asset["price"])
                     self.buff[sym]["low_change"] = self.getChange(
                         self.buff[sym]["price"], self.buff[sym]["low"]
                     )
@@ -249,27 +249,27 @@ class Worker:
 
     def addTickers(self, tickers: List[dict]) -> None:
         """add/update 24H stats"""
-        for token in tickers:
+        for asset in tickers:
 
-            sym = token["symbol"]
+            sym = asset["symbol"]
 
             if self.pattern.search(sym) and sym not in self.nan:
 
-                price = float(token["lastPrice"])
-                low = float(token["lowPrice"])
-                high = float(token["highPrice"])
+                price = float(asset["lastPrice"])
+                low = float(asset["lowPrice"])
+                high = float(asset["highPrice"])
 
                 try:
                     self.buff[sym]["price"] = price
-                    self.buff[sym]["change24"] = float(token["priceChangePercent"])
+                    self.buff[sym]["change24"] = float(asset["priceChangePercent"])
                     self.buff[sym]["low"] = low
                     self.buff[sym]["high"] = high
-                    self.buff[sym]["volume"] = int(float(token["volume"]))
+                    self.buff[sym]["volume"] = int(float(asset["volume"]))
                     self.buff[sym]["low_change"] = self.getChange(price, low)
                     self.buff[sym]["high_change"] = self.getChange(price, high)
                 except KeyError:
                     if self.pair != Pair.BOTH:
-                        self.addTokenToBuff(token)
+                        self.addAssetToBuff(asset)
 
     def getAll(self) -> List[dict]:
 
@@ -293,5 +293,5 @@ class Worker:
             prices = self.getPrices()
             self.updateLatestPrices(prices)
 
-        self.token_count = len(self.buff)
+        self.asset_count = len(self.buff)
         return list(self.buff.values())

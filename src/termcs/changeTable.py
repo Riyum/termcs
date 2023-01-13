@@ -52,7 +52,7 @@ class RepeatedTimer(object):
 
 class TableData(Widget):
     """
-    show the current number of tokens in the table and calculate the ETA of stats update
+    show the current number of assets in the table and calculate the ETA of stats update
 
     Args:
         worker(Worker): Binance API worker instance
@@ -74,7 +74,7 @@ class TableData(Widget):
         grid.add_column("table", justify="center", ratio=1)
         grid.add_column("padR", justify="right", width=1)
         grid.add_row("", "", "")
-        grid.add_row("", Text(f"Tokens: {self.worker.token_count}"), "")
+        grid.add_row("", Text(f"Assets: {self.worker.asset_count}"), "")
         eta = int(self.worker.update_time - time())
         eta = eta if eta > 0 else 0
         grid.add_row("", Text(f"Update in: {eta}s"), "")
@@ -161,7 +161,7 @@ class ChangeTable(Widget):
         except re.error:
             return table
 
-        return [token for token in table if pattern.search(token["token_name"])]
+        return [asset for asset in table if pattern.search(asset["asset_name"])]
 
     def fullTable(self) -> None:
         self.full_table = not self.full_table
@@ -179,7 +179,7 @@ class ChangeTable(Widget):
     def richTable(self, table: List[dict]) -> Table:
         """convert list of dicts into rich table"""
         rich_table = Table(
-            "Pair" if self.show_pair else "Token",
+            "Pair" if self.show_pair else "Asset",
             "Price",
             "Change",
             "High",
@@ -189,31 +189,31 @@ class ChangeTable(Widget):
             "Volume",
         )
 
-        for token in table:
+        for asset in table:
 
-            name = token["token_name"]
+            name = asset["asset_name"]
             if self.show_pair:
-                name = Text(token["token_name"])
-                name.append(token["symbol"][-4:], style="#fafab4 italic")
+                name = Text(asset["asset_name"])
+                name.append(asset["symbol"][-4:], style="#fafab4 italic")
 
-            change = Text(str(token["change24"]))
+            change = Text(str(asset["change24"]))
             change.stylize(
                 "green"
-                if token["change24"] > 0
-                else ("red" if token["change24"] < 0 else "")
+                if asset["change24"] > 0
+                else ("red" if asset["change24"] < 0 else "")
             )
 
-            if token["price"] < 10**-4:
-                price = f'{token["price"]:.8f}'
-                high = f'{token["high"]:.8f}'
-                low = f'{token["low"]:.8f}'
+            if asset["price"] < 10**-4:
+                price = f'{asset["price"]:.8f}'
+                high = f'{asset["high"]:.8f}'
+                low = f'{asset["low"]:.8f}'
             else:
-                price = str(token["price"])
-                high = str(token["high"])
-                low = str(token["low"])
+                price = str(asset["price"])
+                high = str(asset["high"])
+                low = str(asset["low"])
 
-            low_change = str(token["low_change"])
-            high_change = str(token["high_change"])
+            low_change = str(asset["low_change"])
+            high_change = str(asset["high_change"])
 
             rich_table.add_row(
                 name,
@@ -223,7 +223,7 @@ class ChangeTable(Widget):
                 low,
                 high_change,
                 low_change,
-                f'{token["volume"]:,}',
+                f'{asset["volume"]:,}',
             )
 
         return rich_table

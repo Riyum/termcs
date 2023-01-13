@@ -124,7 +124,7 @@ Install the following python packages:
 |Low         | Lowest price for the last 24 hours (USD)|
 |High Change | The difference between the current price and the highest 24 hour price (percentage)|
 |Low Change  | The difference between the current price and the lowest 24 hour price (percentage)|
-|Volume  | Token volume for the last 24 hours |
+|Volume  | Asset volume for the last 24 hours |
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
@@ -134,7 +134,7 @@ Install the following python packages:
 
 A: An update its when Termcs grabs 24H statistics from Binance and updates the following columns: *Change*, *High*, *Low* & *Volume*.
 
-#### Q: What's determine the token pair when both pairs are presented in the table ?
+#### Q: What's determine the asset pair when both pairs are presented in the table ?
 
 A: The pair with the higher volume.
 

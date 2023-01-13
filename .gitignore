@@ -4,5 +4,5 @@ src/compTest.py
 msg
 
 # packaging files
-termcs.egg-info/
+src/termcs.egg-info/
 dist/
