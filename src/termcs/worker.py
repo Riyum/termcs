@@ -2,7 +2,7 @@ import re
 from enum import Enum, auto
 from functools import wraps
 from time import time
-from typing import Any, Callable, List
+from typing import Any, Callable, List, Dict
 
 from binance.spot import Spot
 from requests.exceptions import ConnectionError, ReadTimeout
@@ -144,8 +144,8 @@ class Worker:
 
     def setPairTo(self, p: Pair) -> None:
 
-        # if not self.hasWeightFor(RequestType.STATS):
-        #     return
+        if not self.hasWeightFor(RequestType.STATS):
+            return
 
         self.pair = p
         if p == Pair.BUSD:
@@ -202,9 +202,9 @@ class Worker:
                 tmp.add(name)
                 self.addAssetToBuff(asset)
 
-        self.sortBuff()
+        # self.sortBuff()
 
-    def addAssetToBuff(self, asset: dict) -> None:
+    def addAssetToBuff(self, asset: Dict) -> None:
         """add/update asset data"""
         sym = asset["symbol"]
         vol = int(float(asset["volume"]))
@@ -229,7 +229,7 @@ class Worker:
             "high_change": self.getChange(price, high),
         }
 
-    def updateLatestPrices(self, table: List[dict]) -> None:
+    def updateLatestPrices(self, table: List[Dict]) -> None:
         """update latest prices & high/low change"""
         for asset in table:
 
@@ -247,7 +247,7 @@ class Worker:
                 except KeyError:
                     pass
 
-    def addTickers(self, tickers: List[dict]) -> None:
+    def addTickers(self, tickers: List[Dict]) -> None:
         """add/update 24H stats"""
         for asset in tickers:
 
@@ -271,7 +271,7 @@ class Worker:
                     if self.pair != Pair.BOTH:
                         self.addAssetToBuff(asset)
 
-    def getAll(self) -> List[dict]:
+    def getAll(self) -> None:
 
         """
         fetch current prices & 24H statistics for BUSD | USDT pairs
@@ -288,10 +288,10 @@ class Worker:
 
         if tickers:
             self.addTickers(tickers)
-            self.sortBuff()
+            # self.sortBuff()
         else:
             prices = self.getPrices()
             self.updateLatestPrices(prices)
 
         self.asset_count = len(self.buff)
-        return list(self.buff.values())
+        # return list(self.buff.values())

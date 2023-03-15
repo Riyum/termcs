@@ -4,15 +4,12 @@ from textual.screen import Screen
 from textual.widgets import Input
 
 from .bottomWidget import BottomWidget, MyFooter
-from .changeTable import ChangeTable, TableData
+from .changeTable import ChangeTable
 from .topWidget import TopWidget
-from .worker import Pair, RequestType, Worker
+from .worker import Pair
 
 
 class MainScreen(Screen):
-
-    stats_update_interval = 60
-    worker = Worker(stats_update_interval)
 
     BINDINGS = [
         ("q", "quit", "Quit"),
@@ -27,8 +24,7 @@ class MainScreen(Screen):
 
     def compose(self) -> ComposeResult:
         yield TopWidget()
-        yield TableData(self.worker)
-        yield ChangeTable(self.worker)
+        yield ChangeTable()
         yield BottomWidget()
 
     async def action_quit(self) -> None:
@@ -40,8 +36,11 @@ class MainScreen(Screen):
         self.query_one(ChangeTable).fullTable()
 
     async def action_change_pair(self, p: str) -> None:
-        if not self.worker.hasWeightFor(RequestType.STATS, user=True):
-            return
+
+        # TODO: move the weight check
+        # if not self.worker.hasWeightFor(RequestType.STATS, user=True):
+        #     return
+
         if p == "busd":
             self.query_one(BottomWidget).query_one(MyFooter).toggleKey("b")
             self.query_one(ChangeTable).setPairTo(Pair.BUSD)

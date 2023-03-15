@@ -33,14 +33,31 @@ Clock {
     content-align: center middle;
 }
 
-TableData{
-    height: auto;
+Static #assets, Static #eta {
+    width: 100%;
+    content-align: center middle;
 }
 
 ChangeTable {
+
+    height: 100%;
+    width: 100%;
+    /* border: solid red; */
     align: center middle;
+}
+
+DataTable {
+    background: $surface;
+    color: $text;
+    align: center middle;
+
+    /* width: 100%; */
+    height: 100%;
+    width: auto;
+    /* height: auto; */
+    border: solid red;
     text-opacity: 85%;
-    height: auto;
+    align: center middle;
 }
 
 BottomWidget {

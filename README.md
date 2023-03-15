@@ -24,7 +24,7 @@
 <p align="center">
   <a href="#features">Features</a> •
   <a href="#install">Install</a> •
-  <a href="#usage">Usage</a> •
+  <a href="#usage">Usage</a>
 </p>
 
 <p align="center">
@@ -116,15 +116,15 @@ Install the following python packages:
 
 ## Table notation
 
-|  Column    | Description|
--------------|-------------
-|Price       | Current price (USD)|
-|Change      | The difference between the current price and the price 24 hours ago (percentage)|
-|High        | Highest price for the last 24 hours (USD)|
-|Low         | Lowest price for the last 24 hours (USD)|
-|High Change | The difference between the current price and the highest 24 hour price (percentage)|
-|Low Change  | The difference between the current price and the lowest 24 hour price (percentage)|
-|Volume  | Asset volume for the last 24 hours |
+| Column        | Description                                                                         |
+| ------------- | -------------                                                                       |
+| Price         | Current price (USD)                                                                 |
+| Change        | The difference between the current price and the price 24 hours ago (percentage)    |
+| High          | Highest price for the last 24 hours (USD)                                           |
+| Low           | Lowest price for the last 24 hours (USD)                                            |
+| High Change   | The difference between the current price and the highest 24 hour price (percentage) |
+| Low Change    | The difference between the current price and the lowest 24 hour price (percentage)  |
+| Volume        | Asset volume for the last 24 hours                                                  |
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
