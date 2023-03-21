@@ -1,8 +1,12 @@
+from time import sleep
+
 from textual.app import App, ComposeResult
 from textual.binding import Binding
 from textual.screen import Screen
 from textual.widgets import Input
+from textual.containers import Vertical
 
+from .utils import RepeatedTimer
 from .bottomWidget import BottomWidget, MyFooter
 from .changeTable import ChangeTable
 from .topWidget import TopWidget
@@ -24,7 +28,7 @@ class MainScreen(Screen):
 
     def compose(self) -> ComposeResult:
         yield TopWidget()
-        yield ChangeTable()
+        yield Vertical(ChangeTable(), id="center_wrapper")
         yield BottomWidget()
 
     async def action_quit(self) -> None:
@@ -64,12 +68,26 @@ class MainScreen(Screen):
     def on_input_changed(self, message: Input.Changed) -> None:
         self.query_one(ChangeTable).search_pattern = message.value
 
+    def updateTable(self):
+        self.query_one(ChangeTable).updateTable()
+
 
 class Termcs(App):
 
-    SCREENS = {"main_screen": MainScreen()}
+    main_screen = MainScreen()
     CSS_PATH = "termcs.css"
+    SCREENS = {"main_screen": main_screen}
     TITLE = "Termcs"
 
     def on_mount(self) -> None:
         self.push_screen("main_screen")
+        self.tasker = RepeatedTimer(3, self.updateTable)
+
+    def updateTable(self) -> None:
+        self.call_from_thread(self.main_screen.updateTable)
+
+
+def run():
+    exit_msg = Termcs().run()
+    if exit_msg:
+        print(exit_msg)
