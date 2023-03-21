@@ -8,20 +8,21 @@ from binance.spot import Spot
 from requests.exceptions import ConnectionError, ReadTimeout
 
 ###### API Weight constrains
+# https://binance-docs.github.io/apidocs/spot/en/#limits
 
 STATS_REQ_PER_MINUTE = 1
 PRICE_REQ_PER_MINUTE = round(60 / 3)
+TIME_REQ_PER_MINUTE = round(60 / 3)
 
-MONITOR_WEIGHT = round(60 / 3)  # calling client.time() every 3 secs
+TIME_WEIGHT = 1
 PRICE_WEIGHT = 2
 STATS_WEIGHT = 40
+
 TERMCS_WEIGHT = (
     STATS_WEIGHT * STATS_REQ_PER_MINUTE + PRICE_WEIGHT * PRICE_REQ_PER_MINUTE
 )
 
-# https://binance-docs.github.io/apidocs/spot/en/#limits
-WEIGHT_LIMIT = 1200 - MONITOR_WEIGHT
-
+WEIGHT_LIMIT = 1200 - TIME_WEIGHT * TIME_REQ_PER_MINUTE
 ######
 
 
@@ -105,7 +106,6 @@ class Worker:
     def getWeightStatus(self) -> List:
         """
         calling the cheapest request just to grab the weight usage
-        the grabbing itself done in the decorator
         """
         return self.client.time()
 

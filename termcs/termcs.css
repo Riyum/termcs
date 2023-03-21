@@ -40,17 +40,22 @@ Clock {
     align: center middle;
 }
 
+/* ----------- ChangeTable Labels ----------- */
+
 #asset_count_label{
-    width: auto;
-    margin-top: 1;
     content-align: center middle;
 }
 
 #eta_label {
-    width: auto;
-    margin-bottom: 1;
     content-align: center middle;
 }
+
+#warning_label {
+    color: $error-lighten-1;
+    content-align: center middle;
+}
+
+/* ------------------------------------------- */
 
 DataTable {
     background: $background;
@@ -84,6 +89,7 @@ DataTable >  .datatable--cursor {
 }
 
 ChangeTable {
+    margin-top: 1;
     height: 100%;
     width: auto;
     /* width: 100%; */

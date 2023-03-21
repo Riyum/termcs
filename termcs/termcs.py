@@ -1,5 +1,3 @@
-from time import sleep
-
 from textual.app import App, ComposeResult
 from textual.binding import Binding
 from textual.screen import Screen
@@ -40,20 +38,19 @@ class MainScreen(Screen):
         self.query_one(ChangeTable).fullTable()
 
     async def action_change_pair(self, p: str) -> None:
+        table = self.query_one(ChangeTable)
+        footer = self.query_one(BottomWidget).query_one(MyFooter)
 
-        # TODO: move the weight check
-        # if not self.worker.hasWeightFor(RequestType.STATS, user=True):
-        #     return
-
-        if p == "busd":
-            self.query_one(BottomWidget).query_one(MyFooter).toggleKey("b")
-            self.query_one(ChangeTable).setPairTo(Pair.BUSD)
-        elif p == "usdt":
-            self.query_one(BottomWidget).query_one(MyFooter).toggleKey("t")
-            self.query_one(ChangeTable).setPairTo(Pair.USDT)
-        elif p == "both":
-            self.query_one(BottomWidget).query_one(MyFooter).toggleKey("o")
-            self.query_one(ChangeTable).setPairTo(Pair.BOTH)
+        if table.hasWeight():
+            if p == "busd":
+                footer.toggleKey("b")
+                table.setPairTo(Pair.BUSD)
+            elif p == "usdt":
+                footer.toggleKey("t")
+                table.setPairTo(Pair.USDT)
+            elif p == "both":
+                footer.toggleKey("o")
+                table.setPairTo(Pair.BOTH)
 
     async def action_show_pair(self) -> None:
         self.query_one(BottomWidget).query_one(MyFooter).toggleKey("p")

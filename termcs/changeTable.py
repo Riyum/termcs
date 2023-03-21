@@ -10,7 +10,7 @@ from textual.widgets import Static, DataTable, Label
 
 # from textual.containers import Horizontal, Vertical, Container, Grid
 
-from .worker import STATS_WEIGHT, TERMCS_WEIGHT, WEIGHT_LIMIT, Pair, Worker
+from .worker import STATS_WEIGHT, TERMCS_WEIGHT, WEIGHT_LIMIT, Pair, RequestType, Worker
 from .utils import RepeatedTimer
 
 
@@ -40,8 +40,9 @@ class ChangeTable(Static):
         # self.worker_thread = RepeatedTimer(3, self.updateTable)
 
     def compose(self) -> ComposeResult:
-        yield Label("0", id="asset_count_label")
-        yield Label("0", id="eta_label")
+        yield Label("", id="asset_count_label")
+        yield Label("", id="eta_label")
+        yield Label("", id="warning_label")
         yield self.table
 
     def watch_asset_count(self) -> None:
@@ -65,6 +66,7 @@ class ChangeTable(Static):
 
         self.query_one("#asset_count_label", Label).styles.width = width
         self.query_one("#eta_label", Label).styles.width = width
+        self.query_one("#warning_label", Label).styles.width = width
 
         return width
 
@@ -131,6 +133,13 @@ class ChangeTable(Static):
         if self.worker.kill:
             self.stop()
             self.app.exit("Connection problem ,check your internet, aborting...")
+
+        if WEIGHT_LIMIT - TERMCS_WEIGHT - self.worker.used_weight < STATS_WEIGHT:
+            self.query_one("#warning_label", Label).update(
+                "!!! CHANGE PAIR RESTRICTION ENABLED !!!"
+            )
+        else:
+            self.query_one("#warning_label", Label).update()
 
         self.asset_count = self.worker.asset_count
         eta = int(self.worker.update_time - time())
@@ -241,3 +250,7 @@ class ChangeTable(Static):
         self.active = False
         # self.worker_thread.stop()
         self.tableData_thread.stop()
+
+    def hasWeight(self) -> bool:
+        """check if the stats request can be made"""
+        return self.worker.hasWeightFor(RequestType.STATS, user=True)
