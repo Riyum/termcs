@@ -26,7 +26,7 @@ class MainScreen(Screen):
 
     def compose(self) -> ComposeResult:
         yield TopWidget()
-        yield Vertical(ChangeTable(), id="center_wrapper")
+        yield ChangeTable()
         yield BottomWidget()
 
     async def action_quit(self) -> None:
