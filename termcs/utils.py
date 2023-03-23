@@ -5,7 +5,7 @@ from time import time
 
 class RepeatedTimer(object):
     """
-    call a <function> every <interval> seconds
+    spawn threads every <interval> seconds to execute a <function>
 
     Args:
         interval(float): amount of seconds before each call

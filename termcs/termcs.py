@@ -2,11 +2,10 @@ from textual.app import App, ComposeResult
 from textual.binding import Binding
 from textual.screen import Screen
 from textual.widgets import Input
-from textual.containers import Vertical
 
 from .utils import RepeatedTimer
 from .bottomWidget import BottomWidget, MyFooter
-from .changeTable import ChangeTable
+from .cryptoTable import CryptoTable
 from .topWidget import TopWidget
 from .worker import Pair
 
@@ -26,19 +25,19 @@ class MainScreen(Screen):
 
     def compose(self) -> ComposeResult:
         yield TopWidget()
-        yield ChangeTable()
+        yield CryptoTable()
         yield BottomWidget()
 
     async def action_quit(self) -> None:
-        self.query_one(ChangeTable).stop()
+        self.query_one(CryptoTable).stop()
         self.app.exit()
 
     async def action_full_table(self) -> None:
         self.query_one(BottomWidget).query_one(MyFooter).toggleKey("f")
-        self.query_one(ChangeTable).fullTable()
+        self.query_one(CryptoTable).fullTable()
 
     async def action_change_pair(self, p: str) -> None:
-        table = self.query_one(ChangeTable)
+        table = self.query_one(CryptoTable)
         footer = self.query_one(BottomWidget).query_one(MyFooter)
 
         if table.hasWeight():
@@ -54,7 +53,7 @@ class MainScreen(Screen):
 
     async def action_show_pair(self) -> None:
         self.query_one(BottomWidget).query_one(MyFooter).toggleKey("p")
-        self.query_one(ChangeTable).showPair()
+        self.query_one(CryptoTable).showPair()
 
     async def action_search(self) -> None:
         self.query_one(BottomWidget).toggle_search = True
@@ -63,10 +62,10 @@ class MainScreen(Screen):
         self.query_one(BottomWidget).toggle_search = False
 
     def on_input_changed(self, message: Input.Changed) -> None:
-        self.query_one(ChangeTable).search_pattern = message.value
+        self.query_one(CryptoTable).search_pattern = message.value
 
     def updateTable(self):
-        self.query_one(ChangeTable).updateTable()
+        self.query_one(CryptoTable).updateTable()
 
 
 class Termcs(App):
@@ -78,7 +77,7 @@ class Termcs(App):
 
     def on_mount(self) -> None:
         self.push_screen("main_screen")
-        self.tasker = RepeatedTimer(3, self.updateTable)
+        self.update_table_caller = RepeatedTimer(1, self.updateTable)
 
     def updateTable(self) -> None:
         self.call_from_thread(self.main_screen.updateTable)

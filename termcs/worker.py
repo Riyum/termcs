@@ -86,6 +86,7 @@ class Worker:
         )
         self.client = Spot(timeout=3, show_limit_usage=True)
         self.kill = False
+        self.stats_update = False
         self.update_time = 0
         self.used_weight = 0
         self.asset_count = 0
@@ -104,9 +105,7 @@ class Worker:
 
     @request_wrapper(RequestType.TIME)
     def getWeightStatus(self) -> List:
-        """
-        calling the cheapest request just to grab the weight usage
-        """
+        """calling the cheapest request just to grab the weight usage"""
         return self.client.time()
 
     def getChange(self, latest: float, ref: float) -> float:
@@ -275,23 +274,24 @@ class Worker:
 
         """
         fetch current prices & 24H statistics for BUSD | USDT pairs
+        store the result in self.buff
         """
 
         tickers = []
         prices = []
+        self.stats_update = False
 
         self.getWeightStatus()
 
         if self.update_time - time() < 0 or len(self.buff) == 0:
             tickers = self.getStats()
             self.update_time = time() + self.thresh
+            self.stats_update = True
 
         if tickers:
             self.addTickers(tickers)
-            # self.sortBuff()
         else:
             prices = self.getPrices()
             self.updateLatestPrices(prices)
 
         self.asset_count = len(self.buff)
-        # return list(self.buff.values())

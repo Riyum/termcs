@@ -1,21 +1,19 @@
+from threading import Lock
 from typing import List, Dict
 from time import time
 import re
 
 from rich.text import Text
 from textual.app import ComposeResult
-from textual.geometry import Size
 from textual.reactive import reactive
 from textual.widgets import Static, DataTable, Label
 from textual.containers import Vertical, Horizontal
-
-# from textual.containers import Horizontal, Vertical, Container, Grid
 
 from .worker import STATS_WEIGHT, TERMCS_WEIGHT, WEIGHT_LIMIT, Pair, RequestType, Worker
 from .utils import RepeatedTimer
 
 
-class ChangeTable(Static):
+class CryptoTable(Static):
     """
     fetch market data from Binance into DataTable.
     child widgets updated by their respect threads that initialized in on_mount()
@@ -29,11 +27,12 @@ class ChangeTable(Static):
         super().__init__()
         self.worker = Worker(thresh=60)
         self.table = DataTable(zebra_stripes=True)
+        self.lock = Lock()
         self.initTable()
 
     def on_mount(self) -> None:
-        self.tableStats_thread = RepeatedTimer(1, self.updateTableStats)
-        # self.worker_thread = RepeatedTimer(3, self.updateTable)
+        self.tableStats_caller = RepeatedTimer(1, self.updateTableStats)
+        self.worker_caller = RepeatedTimer(3, self.fillWorkerBuffer)
 
     def compose(self) -> ComposeResult:
         yield Vertical(Label("", id="asset_count_label"), classes="label")
@@ -43,15 +42,15 @@ class ChangeTable(Static):
 
     def watch_search_pattern(self) -> None:
         self.table.clear(True)
-        self.initTable(False)
+        self.initTable()
 
-    def initTable(self, req=True) -> None:
-        """
-        initialize an empty table
+    def fillWorkerBuffer(self):
+        self.lock.acquire()
+        self.worker.getAll()
+        self.lock.release()
 
-        Args:
-            req(bool): if True fetch new data from the API, otherwise use previous cached data
-        """
+    def initTable(self) -> None:
+        """initialize an empty table"""
         self.col_keys = self.table.add_columns(
             *[
                 "Pair" if self.show_pair else "Asset",
@@ -64,9 +63,6 @@ class ChangeTable(Static):
                 "Volume",
             ]
         )
-
-        if req:
-            self.worker.getAll()
 
         table = list(self.worker.buff.values())
         table = table if self.full_table else [*table[:15], *table[-15:]]
@@ -130,13 +126,12 @@ class ChangeTable(Static):
         )
 
     def updateTable(self) -> None:
-        """update (an initialized) table with new data"""
-        self.worker.getAll()
+        """update (an initialized) table with data"""
 
-        if int(self.worker.update_time - time()) <= 0:
+        if self.worker.stats_update:
             """sort on stats update"""
             self.table.clear(True)
-            self.initTable(False)
+            self.initTable()
             return
 
         table = list(self.worker.buff.values())
@@ -204,22 +199,25 @@ class ChangeTable(Static):
     def fullTable(self) -> None:
         self.full_table = not self.full_table
         self.table.clear(True)
-        self.initTable(False)
+        self.initTable()
 
     def setPairTo(self, p: Pair) -> None:
         self.worker.setPairTo(p)
         self.table.clear(True)
+        self.worker_caller.stop()
+        self.fillWorkerBuffer()
+        self.worker_caller.start()
         self.initTable()
 
     def showPair(self) -> None:
         self.show_pair = not self.show_pair
         self.table.clear(True)
-        self.initTable(False)
+        self.initTable()
 
     def stop(self) -> None:
         self.active = False
-        # self.worker_thread.stop()
-        self.tableStats_thread.stop()
+        self.worker_caller.stop()
+        self.tableStats_caller.stop()
 
     def hasWeight(self) -> bool:
         """check if the stats request can be made"""

@@ -33,7 +33,7 @@ Clock {
     content-align: center middle;
 }
 
-/* ----------- ChangeTable Labels ----------- */
+/* ----------- CryptoTable Labels ----------- */
 .label {
     /* border: round blue; */
     height: auto;
@@ -88,7 +88,7 @@ DataTable >  .datatable--cursor {
     color: $text;
 }
 
-ChangeTable {
+CryptoTable {
     margin-top: 1;
     height: 100%;
     /* width: auto; */
