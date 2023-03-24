@@ -43,13 +43,13 @@ class MainScreen(Screen):
         if table.hasWeight():
             if p == "busd":
                 footer.toggleKey("b")
-                table.setPairTo(Pair.BUSD)
+                table.setPair(Pair.BUSD)
             elif p == "usdt":
                 footer.toggleKey("t")
-                table.setPairTo(Pair.USDT)
+                table.setPair(Pair.USDT)
             elif p == "both":
                 footer.toggleKey("o")
-                table.setPairTo(Pair.BOTH)
+                table.setPair(Pair.BOTH)
 
     async def action_show_pair(self) -> None:
         self.query_one(BottomWidget).query_one(MyFooter).toggleKey("p")
@@ -64,8 +64,8 @@ class MainScreen(Screen):
     def on_input_changed(self, message: Input.Changed) -> None:
         self.query_one(CryptoTable).search_pattern = message.value
 
-    def updateTable(self):
-        self.query_one(CryptoTable).updateTable()
+    def refreshTable(self):
+        self.query_one(CryptoTable)._update()
 
 
 class Termcs(App):
@@ -77,10 +77,10 @@ class Termcs(App):
 
     def on_mount(self) -> None:
         self.push_screen("main_screen")
-        self.update_table_caller = RepeatedTimer(1, self.updateTable)
+        self.refresh_table_caller = RepeatedTimer(1, self.refreshTable)
 
-    def updateTable(self) -> None:
-        self.call_from_thread(self.main_screen.updateTable)
+    def refreshTable(self) -> None:
+        self.call_from_thread(self.main_screen.refreshTable)
 
 
 def run():

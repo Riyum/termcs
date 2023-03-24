@@ -46,53 +46,54 @@ class CryptoTable(Static):
 
     def fillWorkerBuffer(self):
         self.lock.acquire()
-        self.worker.getAll()
+        self.worker.fetchAll()
         self.lock.release()
 
-    def initTable(self) -> None:
-        """initialize an empty table"""
-        self.col_keys = self.table.add_columns(
-            *[
-                "Pair" if self.show_pair else "Asset",
-                "Price",
-                "Change",
-                "High",
-                "Low",
-                "High change",
-                "Low change",
-                "Volume",
-            ]
-        )
+    def fullTable(self) -> None:
+        self.full_table = not self.full_table
+        self.table.clear(True)
+        self.initTable()
 
-        table = list(self.worker.buff.values())
-        table = table if self.full_table else [*table[:15], *table[-15:]]
-        table = self.filt(table, self.search_pattern)
-        table = self.sortAssetsList(table)
+    def setPair(self, p: Pair) -> None:
+        self.worker.setPair(p)
+        self.table.clear(True)
+        self.worker_caller.stop()
+        self.fillWorkerBuffer()
+        self.worker_caller.start()
+        self.initTable()
 
-        for asset in table:
-            row_asset = self.assetToRow(asset)
-            self.table.add_row(*row_asset, key=asset["symbol"])
+    def showPair(self) -> None:
+        self.show_pair = not self.show_pair
+        self.table.clear(True)
+        self.initTable()
 
-    # def fillTableWithRawData(self, table: List[Dict]) -> None:
-    #     """fill an empty table with numbers"""
-    #     self.table.clear(True)
-    #     for asset in table:
-    #         row = [
-    #             asset["asset_name"],
-    #             asset["price"],
-    #             asset["change24"],
-    #             asset["high"],
-    #             asset["low"],
-    #             asset["high_change"],
-    #             asset["low_change"],
-    #             asset["volume"],
-    #         ]
-    #         self.table.add_row(*row, key=asset["symbol"])
+    def stop(self) -> None:
+        self.active = False
+        self.worker_caller.stop()
+        self.tableStats_caller.stop()
 
     def sortAssetsList(
         self, assets: List[Dict], key: str = "change24", rev: bool = True
     ) -> List[Dict]:
         return sorted(assets, key=lambda x: x[key], reverse=rev)
+
+    def filt(self, assets: List[Dict], sp: str) -> List[Dict]:
+        """Filter the assets by name"""
+        if not sp:
+            return assets
+        try:
+            pattern = re.compile(sp.upper())
+        except re.error:
+            return assets
+
+        return [asset for asset in assets if pattern.search(asset["asset_name"])]
+
+    def hasWeight(self) -> bool:
+        """
+        used by the parrent widget to check if the stats request
+        can be made by the worker
+        """
+        return self.worker.hasWeightFor(RequestType.STATS, user=True)
 
     def updateTableStats(self) -> None:
         """update the labels above the table"""
@@ -125,23 +126,14 @@ class CryptoTable(Static):
             f"Update in: {eta if eta > 0 else 0}"
         )
 
-    def updateTable(self) -> None:
-        """update (an initialized) table with data"""
+    def prepTableData(self, assets: List[Dict], sort=False) -> List[Dict]:
+        """prepare the data before inserting it to the DataTable"""
+        assets = assets if self.full_table else [*assets[:15], *assets[-15:]]
+        assets = self.filt(assets, self.search_pattern)
+        if sort:
+            assets = self.sortAssetsList(assets)
 
-        if self.worker.stats_update:
-            """sort on stats update"""
-            self.table.clear(True)
-            self.initTable()
-            return
-
-        table = list(self.worker.buff.values())
-        table = table if self.full_table else [*table[:15], *table[-15:]]
-        table = self.filt(table, self.search_pattern)
-
-        for asset in table:
-            row_asset = self.assetToRow(asset)
-            for i, val in enumerate(row_asset[1:]):
-                self.table.update_cell(asset["symbol"], self.col_keys[i + 1], val)
+        return assets
 
     def assetToRow(self, asset: Dict) -> List:
         """
@@ -185,40 +177,44 @@ class CryptoTable(Static):
 
         return r
 
-    def filt(self, table: List[Dict], sp: str) -> List[Dict]:
-        """Filter the table according to a specific pattern"""
-        if not sp:
-            return table
-        try:
-            pattern = re.compile(sp.upper())
-        except re.error:
-            return table
+    def initTable(self) -> None:
+        """initialize an empty DataTable"""
+        self.col_keys = self.table.add_columns(
+            *[
+                "Pair" if self.show_pair else "Asset",
+                "Price",
+                "Change",
+                "High",
+                "Low",
+                "High change",
+                "Low change",
+                "Volume",
+            ]
+        )
 
-        return [asset for asset in table if pattern.search(asset["asset_name"])]
+        table_data = self.prepTableData(self.worker.getAssets(), sort=True)
 
-    def fullTable(self) -> None:
-        self.full_table = not self.full_table
-        self.table.clear(True)
-        self.initTable()
+        for asset in table_data:
+            row_asset = self.assetToRow(asset)
+            self.table.add_row(*row_asset, key=asset["symbol"])
 
-    def setPairTo(self, p: Pair) -> None:
-        self.worker.setPairTo(p)
-        self.table.clear(True)
-        self.worker_caller.stop()
-        self.fillWorkerBuffer()
-        self.worker_caller.start()
-        self.initTable()
+    def updateTable(self) -> None:
+        """update (an initialized) DataTable"""
 
-    def showPair(self) -> None:
-        self.show_pair = not self.show_pair
-        self.table.clear(True)
-        self.initTable()
+        table_data = self.prepTableData(self.worker.getAssets())
 
-    def stop(self) -> None:
-        self.active = False
-        self.worker_caller.stop()
-        self.tableStats_caller.stop()
+        for asset in table_data:
+            row_asset = self.assetToRow(asset)
+            for i, val in enumerate(row_asset[1:]):
+                self.table.update_cell(asset["symbol"], self.col_keys[i + 1], val)
 
-    def hasWeight(self) -> bool:
-        """check if the stats request can be made"""
-        return self.worker.hasWeightFor(RequestType.STATS, user=True)
+    def _update(self):
+        """
+        called by a thread from Termcs
+        update the DataTable or clean and initialize on stats update
+        """
+        if self.worker.stats_update:
+            self.table.clear(True)
+            self.initTable()
+        else:
+            self.updateTable()

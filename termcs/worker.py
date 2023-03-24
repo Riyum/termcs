@@ -49,7 +49,7 @@ def request_wrapper(r_type: RequestType) -> Any:
 
     def decorator_request_wrapper(func: Callable) -> Any:
         @wraps(func)
-        def catch(self) -> List:
+        def fetch(self) -> List:
             try:
                 if r_type == RequestType.TIME or self.hasWeightFor(r_type):
                     res = func(self)
@@ -66,7 +66,7 @@ def request_wrapper(r_type: RequestType) -> Any:
                 self.kill = True
                 return []
 
-        return catch
+        return fetch
 
     return decorator_request_wrapper
 
@@ -96,15 +96,15 @@ class Worker:
         self.prepBuff()
 
     @request_wrapper(RequestType.PRICE)
-    def getPrices(self) -> List:
+    def fetchPrices(self) -> List:
         return self.client.ticker_price()
 
     @request_wrapper(RequestType.STATS)
-    def getStats(self) -> List:
+    def fetchStats(self) -> List:
         return self.client.ticker_24hr()
 
     @request_wrapper(RequestType.TIME)
-    def getWeightStatus(self) -> List:
+    def fetchWeightStatus(self) -> List:
         """calling the cheapest request just to grab the weight usage"""
         return self.client.time()
 
@@ -127,6 +127,10 @@ class Worker:
             )
         }
 
+    def getAssets(self) -> List[Dict]:
+        """return a list of the assets in buff"""
+        return list(self.buff.values())
+
     def hasWeightFor(self, r_type: RequestType, user=False) -> bool:
         """return true if the request can be made according to the used weight"""
         if user:
@@ -141,7 +145,7 @@ class Worker:
 
         return False
 
-    def setPairTo(self, p: Pair) -> None:
+    def setPair(self, p: Pair) -> None:
 
         if not self.hasWeightFor(RequestType.STATS):
             return
@@ -171,7 +175,7 @@ class Worker:
         if self.pair != Pair.BOTH:
             return
 
-        tickers = self.getStats()
+        tickers = self.fetchStats()
         self.update_time = time() + self.thresh
 
         tmp = set()
@@ -270,7 +274,7 @@ class Worker:
                     if self.pair != Pair.BOTH:
                         self.addAssetToBuff(asset)
 
-    def getAll(self) -> None:
+    def fetchAll(self) -> None:
 
         """
         fetch current prices & 24H statistics for BUSD | USDT pairs
@@ -281,17 +285,17 @@ class Worker:
         prices = []
         self.stats_update = False
 
-        self.getWeightStatus()
+        self.fetchWeightStatus()
 
         if self.update_time - time() < 0 or len(self.buff) == 0:
-            tickers = self.getStats()
+            tickers = self.fetchStats()
             self.update_time = time() + self.thresh
             self.stats_update = True
 
         if tickers:
             self.addTickers(tickers)
         else:
-            prices = self.getPrices()
+            prices = self.fetchPrices()
             self.updateLatestPrices(prices)
 
         self.asset_count = len(self.buff)
