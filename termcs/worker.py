@@ -41,8 +41,8 @@ class RequestType(Enum):
 def request_wrapper(r_type: RequestType) -> Any:
     """
     Deal (violently) with connection problems and monitor API weight status
-    TIME requests will allways happen hence the subtraction of MONITOR_WEIGHT from the base limit,
-    other requests depend on hasWeightFor anwser
+    TIME requests will always happen hence the subtraction of MONITOR_WEIGHT from the base limit,
+    other requests depend on hasWeightFor answer
 
     https://realpython.com/primer-on-python-decorators/#decorators-with-arguments
     """
@@ -118,17 +118,17 @@ class Worker:
     def resetBuff(self) -> None:
         self.buff.clear()
 
-    def sortBuff(self) -> None:
-        """sort dict according to 24H change percentage"""
+    def sortBuff(self, key: str = "change24", rev=True) -> None:
+        """sort the assets in the buffer"""
         self.buff = {
             k: v
             for k, v in sorted(
-                self.buff.items(), key=lambda asset: asset[1]["change24"], reverse=True
+                self.buff.items(), key=lambda asset: asset[1][key], reverse=rev
             )
         }
 
     def getAssets(self) -> List[Dict]:
-        """return a list of the assets in buff"""
+        """return a list of the assets"""
         return list(self.buff.values())
 
     def hasWeightFor(self, r_type: RequestType, user=False) -> bool:
@@ -205,8 +205,6 @@ class Worker:
                 tmp.add(name)
                 self.addAssetToBuff(asset)
 
-        # self.sortBuff()
-
     def addAssetToBuff(self, asset: Dict) -> None:
         """add/update asset data"""
         sym = asset["symbol"]
@@ -225,11 +223,11 @@ class Worker:
             "asset_name": asset["symbol"][:-4],
             "price": price,
             "change24": float(asset["priceChangePercent"]),
-            "low": low,
             "high": high,
-            "volume": vol,
-            "low_change": self.getChange(price, low),
+            "low": low,
             "high_change": self.getChange(price, high),
+            "low_change": self.getChange(price, low),
+            "volume": vol,
         }
 
     def updateLatestPrices(self, table: List[Dict]) -> None:

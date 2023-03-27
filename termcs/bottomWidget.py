@@ -124,7 +124,6 @@ class BottomWidget(Container):
     toggle_search = reactive(False)
 
     def compose(self) -> ComposeResult:
-        yield Button(id="dummy_button")
         yield Widget(MyFooter(), id="footer")
         yield Input(id="search_input", classes="hidden")
 
@@ -133,5 +132,3 @@ class BottomWidget(Container):
         self.query_one("#search_input", Input).set_class(not toggle_search, "hidden")
         if toggle_search:
             self.query_one("#search_input", Input).focus()
-        else:
-            self.query_one("#dummy_button", Button).focus()

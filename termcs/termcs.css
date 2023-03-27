@@ -84,8 +84,12 @@ DataTable > .datatable--even-row {
 }
 
 DataTable >  .datatable--cursor {
-    background: $secondary 45%;
+    background: $panel-lighten-2 50%;
     color: $text;
+}
+
+DataTable > .datatable--hover {
+    background: $panel-lighten-3 50%;
 }
 
 CryptoTable {
@@ -102,10 +106,6 @@ BottomWidget {
     dock: bottom;
     color: $text;
     height: 1;
-}
-
-BottomWidget #dummy_button{
-    display: none;
 }
 
 BottomWidget #search_input{

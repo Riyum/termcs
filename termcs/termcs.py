@@ -1,7 +1,7 @@
 from textual.app import App, ComposeResult
 from textual.binding import Binding
 from textual.screen import Screen
-from textual.widgets import Input
+from textual.widgets import DataTable, Input
 
 from .utils import RepeatedTimer
 from .bottomWidget import BottomWidget, MyFooter
@@ -60,6 +60,7 @@ class MainScreen(Screen):
 
     async def action_reset_focus(self) -> None:
         self.query_one(BottomWidget).toggle_search = False
+        self.query_one(DataTable).focus()
 
     def on_input_changed(self, message: Input.Changed) -> None:
         self.query_one(CryptoTable).search_pattern = message.value
