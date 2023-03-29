@@ -24,11 +24,11 @@
 <p align="center">
   <a href="#features">Features</a> •
   <a href="#install">Install</a> •
-  <a href="#usage">Usage</a> •
+  <a href="#usage">Usage</a>
 </p>
 
 <p align="center">
-  <img align="center" src="https://raw.githubusercontent.com/Riyum/termcs/master/imgs/demo.gif" />
+  <img align="center" src="https://raw.githubusercontent.com/Riyum/termcs/master/imgs/demo.png" />
 </p>
 
 <details>
@@ -36,7 +36,6 @@
   <ol>
     <li><a href="#features">Features</a></li>
     <li><a href="#install">Install</a></li>
-    <li><a href="#running-from-source">Running from source</a></li>
     <li><a href="#usage">Usage</a></li>
     <li><a href="#table-notation">Table notation</a></li>
     <li><a href="#faq">FAQ</a></li>
@@ -55,6 +54,7 @@
 * Search the table with regex compatible patterns
 * Full/mini table mode
   - When in mini mode only the top and bottom 15 pairs are shown
+* Sort the table by a specific column 
 * Cross platform
   - Windows, macOS and Linux ready.
 
@@ -78,25 +78,9 @@ termcs
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
-## Running from source
-
-Install the following python packages:
-
-[Textual](https://github.com/Textualize/textual) - TUI framework for python  
-[Binance-connector](https://github.com/binance/binance-connector-python) - Connector to Binance public API
-
-   ```sh
-   # clone the repo
-   git clone https://github.com/Riyum/termcs.git
-   # change directory
-   cd termcs
-   # run
-   python src/run.py
-   ```
-
-<p align="right">(<a href="#top">back to top</a>)</p>
-
 ## Usage
+
+To sort the table, simply click on the column header 
 
 ### Keybindings
 
@@ -116,15 +100,15 @@ Install the following python packages:
 
 ## Table notation
 
-|  Column    | Description|
--------------|-------------
-|Price       | Current price (USD)|
-|Change      | The difference between the current price and the price 24 hours ago (percentage)|
-|High        | Highest price for the last 24 hours (USD)|
-|Low         | Lowest price for the last 24 hours (USD)|
-|High Change | The difference between the current price and the highest 24 hour price (percentage)|
-|Low Change  | The difference between the current price and the lowest 24 hour price (percentage)|
-|Volume  | Asset volume for the last 24 hours |
+| Column        | Description                                                                         |
+| ------------- | -------------                                                                       |
+| Price         | Current price (USD)                                                                 |
+| Change        | The difference between the current price and the price 24 hours ago (percentage)    |
+| High          | Highest price for the last 24 hours (USD)                                           |
+| Low           | Lowest price for the last 24 hours (USD)                                            |
+| High Change   | The difference between the current price and the highest 24 hour price (percentage) |
+| Low Change    | The difference between the current price and the lowest 24 hour price (percentage)  |
+| Volume        | Asset volume for the last 24 hours                                                  |
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
@@ -137,10 +121,6 @@ A: An update its when Termcs grabs 24H statistics from Binance and updates the f
 #### Q: What's determine the asset pair when both pairs are presented in the table ?
 
 A: The pair with the higher volume.
-
-#### Q: Why is it the delete button doesn't work when in search mode ?
-
-A: Try `ctrl` + `d`.
 
 #### Q: Why there is a note "CHANGE PAIR RESTRICTION ENABLED" above the table ?
 

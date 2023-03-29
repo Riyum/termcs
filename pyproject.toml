@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "termcs"
-version = "0.0.2"
+version = "0.1.0"
 authors = [{ name="Riyum" }]
 description = "Terminal crypto screener"
 requires-python = ">=3.7"
@@ -23,19 +23,18 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     ]
 dependencies = [
-    "textual >= 0.7.0",
+    "textual >= 0.15.0",
     "binance-connector",
 ]
 
-[project.scripts]
-termcs = "termcs:run"
-
-[tool.setuptools.packages.find]
-where = ["src"]
-include = ["termcs"]
+[tool.setuptools]
+packages = ["termcs"]
 
 [tool.setuptools.package-data]
 termcs = ["*.css"]
+
+[project.scripts]
+termcs = "termcs:run"
 
 [project.urls]
 "Homepage" = "https://github.com/Riyum/termcs"
@@ -45,7 +44,7 @@ termcs = ["*.css"]
 target-version = ['py37']
 
 [tool.pyright]
-include = ["src"]
+include = ["termcs"]
 exclude = ["**/__pycache__"]
 reportMissingTypeStubs = false
 pythonVersion = "3.7"

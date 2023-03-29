@@ -1,0 +1,148 @@
+Screen {
+    layout: vertical;
+    background: $background;
+}
+
+/* ------------------------------------------- */
+
+TopWidget {
+    background: $background-lighten-1;
+    color: $text;
+    height: 1;
+    dock: top;
+}
+
+TopWidget #icon {
+    dock: left;
+    padding: 0 1;
+    width: 8;
+    content-align: left middle;
+}
+
+TopWidget #app-title {
+    content-align: center middle;
+    width: 100%;
+}
+
+Clock {
+    dock: right;
+    width: 10;
+    padding: 0 1;
+
+    background: $background-lighten-2;
+    color: $text;
+    text-opacity: 85%;
+    content-align: center middle;
+}
+
+/* ----------- CryptoTable Labels ----------- */
+.label {
+    /* border: round blue; */
+    height: auto;
+    align: center top;
+}
+
+#eta_label {
+    margin-bottom: 1;
+}
+
+#warning_label {
+    color: $error-lighten-1;
+}
+
+#table {
+    width: 100%;
+    height: 100%;
+    align: center top;
+    /* border: round yellow; */
+}
+
+DataTable {
+    background: $background;
+    color: $text;
+    align: center top;
+    width: auto;
+    height: 91%;
+    text-opacity: 85%;
+    /* border: solid red; */
+}
+
+DataTable > .datatable--header {
+    text-style: bold;
+    background: $primary-background 80%;
+    color: $text;
+}
+
+DataTable > .datatable--odd-row {
+    background: $surface 40%;
+}
+
+DataTable > .datatable--even-row {
+    background: $surface 70%;
+}
+
+DataTable >  .datatable--cursor {
+    background: $panel-lighten-2 50%;
+    color: $text;
+}
+
+DataTable > .datatable--hover {
+    background: $panel-lighten-3 50%;
+}
+
+CryptoTable {
+    margin-top: 1;
+    height: 100%;
+    width: 100%;
+    color: $text;
+    align: center middle;
+    /* border: solid magenta; */
+}
+
+/* ------------------------------------------- */
+
+BottomWidget {
+    dock: bottom;
+    color: $text;
+    height: 1;
+}
+
+BottomWidget #search_input{
+    border: none;
+}
+
+Footer {
+    background: $panel;
+    color: $text;
+    dock: bottom;
+    height: 1;
+}
+
+Footer > .footer--highlight {
+    background: $secondary-background-lighten-3;
+}
+
+Footer > .footer--highlight-key {
+    background: $secondary-background-lighten-1;
+    text-style: bold;
+}
+
+Footer > .footer--pressed {
+    background: $panel-lighten-3;
+}
+
+Footer > .footer--pressed-key {
+    text-style: bold;
+    background: $secondary-darken-1;
+}
+
+Footer > .footer--key {
+    text-style: bold;
+    background: $panel-lighten-1;
+}
+
+/* ------------------------------------------- */
+
+.hidden {
+    display: none;
+}

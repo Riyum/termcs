@@ -1,8 +1,7 @@
-src/termcs/__pycache__/
-src/compTest.py
+termcs/__pycache__
+termcs.egg-info/
+dist/
+run.py
+compTest.py
 .projectile
 msg
-
-# packaging files
-src/termcs.egg-info/
-dist/
