@@ -13,7 +13,7 @@ from textual.widgets import Button, Footer, Input
 class MyFooter(Footer):
 
     """
-    Footer override for style
+    Footer override for styling
     """
 
     COMPONENT_CLASSES = {

@@ -3,6 +3,8 @@ Screen {
     background: $background;
 }
 
+/* ------------------------------------------- */
+
 TopWidget {
     background: $background-lighten-1;
     color: $text;
@@ -48,23 +50,19 @@ Clock {
     color: $error-lighten-1;
 }
 
-/* ------------------------------------------- */
-
 #table {
-    /* border: round yellow; */
     width: 100%;
     height: 100%;
     align: center top;
+    /* border: round yellow; */
 }
 
 DataTable {
     background: $background;
     color: $text;
     align: center top;
-    /* width: 100%; */
     width: auto;
     height: 91%;
-    /* height: auto; */
     text-opacity: 85%;
     /* border: solid red; */
 }
@@ -95,12 +93,13 @@ DataTable > .datatable--hover {
 CryptoTable {
     margin-top: 1;
     height: 100%;
-    /* width: auto; */
     width: 100%;
     color: $text;
     align: center middle;
     /* border: solid magenta; */
 }
+
+/* ------------------------------------------- */
 
 BottomWidget {
     dock: bottom;
@@ -141,6 +140,8 @@ Footer > .footer--key {
     text-style: bold;
     background: $panel-lighten-1;
 }
+
+/* ------------------------------------------- */
 
 .hidden {
     display: none;

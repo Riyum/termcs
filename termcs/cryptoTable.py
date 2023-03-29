@@ -33,16 +33,17 @@ class CryptoTable(Static):
         self.lock = Lock()
         self.initTable()
 
-    def on_mount(self) -> None:
-        self.tableStats_caller = RepeatedTimer(1, self.updateTableStats)
-        self.worker_caller = RepeatedTimer(3, self.fillWorkerBuffer)
-        self.table.focus()
-
     def compose(self) -> ComposeResult:
         yield Vertical(Label("", id="asset_count_label"), classes="label")
         yield Vertical(Label("", id="eta_label"), classes="label")
         yield Vertical(Label("", id="warning_label"), classes="label")
         yield Horizontal(self.table, id="table")
+
+    def on_mount(self) -> None:
+        self.updateTableStats()
+        self.tableStats_caller = RepeatedTimer(1, self.updateTableStats)
+        self.worker_caller = RepeatedTimer(3, self.fillWorkerBuffer)
+        self.table.focus()
 
     def watch_search_pattern(self) -> None:
         self.table.clear(True)
@@ -118,7 +119,7 @@ class CryptoTable(Static):
 
         eta = int(self.worker.update_time - time())
         self.query_one("#eta_label", Label).update(
-            f"Update in: {eta if eta > 0 else 0}"
+            f"Update in: {eta if eta > 0 else 0}s"
         )
 
     def prepTableData(self, sort: bool = False) -> List[List]:

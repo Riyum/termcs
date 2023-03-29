@@ -89,11 +89,11 @@ class Worker:
         self.stats_update = False
         self.update_time = 0
         self.used_weight = 0
-        self.asset_count = 0
         self.pair = Pair.BOTH
         self.buff = {}
         self.nan = []
         self.prepBuff()
+        self.asset_count = len(self.buff)
 
     @request_wrapper(RequestType.PRICE)
     def fetchPrices(self) -> List:
