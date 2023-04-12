@@ -3,6 +3,14 @@ from threading import Timer
 from time import time
 
 
+def getChange(latest: float, ref: float) -> float:
+    """calculate price change"""
+    if latest - ref == 0:
+        return 0
+
+    return round((latest - ref) / ref * 100, 3)
+
+
 class RepeatedTimer(object):
     """
     spawn threads every <interval> seconds to execute a <function>

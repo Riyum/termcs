@@ -36,8 +36,8 @@ Clock {
 }
 
 /* ----------- CryptoTable Labels ----------- */
-.label {
-    /* border: round blue; */
+
+.screener_label {
     height: auto;
     align: center top;
 }
@@ -90,13 +90,12 @@ DataTable > .datatable--hover {
     background: $panel-lighten-3 50%;
 }
 
-CryptoTable {
+ScreenerTable{
     margin-top: 1;
     height: 100%;
     width: 100%;
     color: $text;
     align: center middle;
-    /* border: solid magenta; */
 }
 
 /* ------------------------------------------- */
