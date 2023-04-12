@@ -6,6 +6,7 @@ from textual.widgets import DataTable, Input
 from .bottomWidget import BottomWidget, MyFooter
 from .screenerTable import ScreenerTable
 from .topWidget import TopWidget
+from .utils import ShutdownMsg
 from .worker import QuoteCurrency
 
 
@@ -28,8 +29,7 @@ class Screener(Screen):
         yield BottomWidget()
 
     def action_quit(self) -> None:
-        self.query_one(ScreenerTable).stop()
-        self.app.exit()
+        self.post_message(ShutdownMsg())
 
     async def action_full_table(self) -> None:
         self.query_one(BottomWidget).query_one(MyFooter).toggleKey("f")
@@ -39,15 +39,13 @@ class Screener(Screen):
         table = self.query_one(ScreenerTable)
         footer = self.query_one(BottomWidget).query_one(MyFooter)
 
-        if table.hasWeight():
+        if table.setQuoteCurrency(qc):
             if qc == QuoteCurrency.BUSD.value:
                 footer.toggleKey("b")
             elif qc == QuoteCurrency.USDT.value:
                 footer.toggleKey("t")
             elif qc == QuoteCurrency.BOTH.value:
                 footer.toggleKey("o")
-
-            table.setQuoteCurrency(qc)
 
     async def action_show_pair(self) -> None:
         self.query_one(BottomWidget).query_one(MyFooter).toggleKey("p")
@@ -62,3 +60,6 @@ class Screener(Screen):
 
     def on_input_changed(self, message: Input.Changed) -> None:
         self.query_one(ScreenerTable).search_pattern = message.value
+
+    def shutdown(self):
+        self.query_one(ScreenerTable).stop()

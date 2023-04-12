@@ -64,6 +64,7 @@ DataTable {
     width: auto;
     height: 91%;
     text-opacity: 85%;
+    scrollbar-gutter: stable;
     /* border: solid red; */
 }
 

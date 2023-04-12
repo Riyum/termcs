@@ -129,10 +129,10 @@ class Worker:
 
         return False
 
-    def setQuoteCurrency(self, qc: QuoteCurrency) -> None:
+    def setQuoteCurrency(self, qc: QuoteCurrency) -> bool:
 
-        if not self.hasWeightFor(RequestType.STATS):
-            return
+        if not self.hasWeightFor(RequestType.STATS, True):
+            return False
 
         try:
             self.quote_cur = QuoteCurrency(qc)
@@ -143,19 +143,18 @@ class Worker:
             p = "^(?![A-Z]+(UP|DOWN|BULL|BEAR)(BUSD))([A-Z]+(BUSD)$)"
         elif self.quote_cur == QuoteCurrency.USDT:
             p = "^(?![A-Z]+(UP|DOWN|BULL|BEAR)(USDT))([A-Z]+(USDT)$)"
-        elif self.quote_cur == QuoteCurrency.BOTH:
-            p = "^(?![A-Z]+(UP|DOWN|BULL|BEAR)(USDT|BUSD))([A-Z]+(USDT|BUSD)$)"
         else:
             p = "^(?![A-Z]+(UP|DOWN|BULL|BEAR)(USDT|BUSD))([A-Z]+(USDT|BUSD)$)"
 
         self.pattern = re.compile(p)
         self.resetBuff()
         self.prepBuff()
+        return True
 
     def prepBuff(self) -> None:
         """
         called if self.pattern changed to both usdt & busd
-        self.buff will contain the pair with the highest volume
+        self.buff will contain the pair with the higher volume
         """
         if self.quote_cur != QuoteCurrency.BOTH:
             return
@@ -166,16 +165,17 @@ class Worker:
         for pair in tickers:
 
             sym = pair["symbol"]
-            base_cur = pair["symbol"][:-4]
-            quote_cur = pair["symbol"][-4:]
             vol = int(float(pair["volume"]))
 
             if not self.pattern.search(sym):
                 continue
 
             if vol == 0:
-                self.nan.add(base_cur)
+                self.nan.add(sym)
                 continue
+
+            base_cur = pair["symbol"][:-4]
+            quote_cur = pair["symbol"][-4:]
 
             if base_cur in self.buff:
                 if quote_cur != self.buff[base_cur]["quote_cur"]:
@@ -187,13 +187,15 @@ class Worker:
 
     def addPairToBuff(self, pair: Dict) -> None:
         """add/update pair data"""
+
+        sym = pair["symbol"]
         vol = int(float(pair["volume"]))
-        base_cur = pair["symbol"][:-4]
 
         if vol == 0:
-            self.nan.add(base_cur)
+            self.nan.add(sym)
             return
 
+        base_cur = pair["symbol"][:-4]
         price = float(pair["lastPrice"])
         low = float(pair["lowPrice"])
         high = float(pair["highPrice"])
@@ -216,7 +218,7 @@ class Worker:
             sym = pair["symbol"]
             base_cur = pair["symbol"][:-4]
 
-            if self.pattern.search(sym) and base_cur not in self.nan:
+            if self.pattern.search(sym) and sym not in self.nan:
                 try:
                     self.buff[base_cur]["price"] = float(pair["price"])
                     self.buff[base_cur]["low_change"] = getChange(
@@ -235,7 +237,7 @@ class Worker:
             sym = pair["symbol"]
             base_cur = pair["symbol"][:-4]
 
-            if self.pattern.search(sym) and base_cur not in self.nan:
+            if self.pattern.search(sym) and sym not in self.nan:
 
                 price = float(pair["lastPrice"])
                 low = float(pair["lowPrice"])

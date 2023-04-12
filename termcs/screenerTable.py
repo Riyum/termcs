@@ -10,13 +10,13 @@ from textual.message import Message
 from textual.reactive import reactive
 from textual.widgets import DataTable, Label, Static
 
-from .utils import RepeatedTimer
+from .utils import RepeatedTimer, ShutdownMsg
 from .worker import QuoteCurrency, RequestType, Worker
 
 
 class ScreenerTable(Static):
     """
-    fetch market data from Binance into DataTable.
+    DataTable filled with market data from Binance.
     child widgets updated by their respect threads that initialized in on_mount()
     """
 
@@ -65,6 +65,7 @@ class ScreenerTable(Static):
             self.worker.fetchAll()
 
     def _refresh(self):
+        """fetch market data and fill the DataTable"""
         self.fillWorkerBuffer()
         self.app.call_from_thread(self.updateTable)
 
@@ -72,10 +73,13 @@ class ScreenerTable(Static):
         self.full_table = not self.full_table
         self.updateTable()
 
-    def setQuoteCurrency(self, qc: QuoteCurrency) -> None:
-        self.worker.setQuoteCurrency(qc)
-        self.fillWorkerBuffer()
-        self.updateTable()
+    def setQuoteCurrency(self, qc: QuoteCurrency) -> bool:
+        if self.worker.setQuoteCurrency(qc):
+            self.fillWorkerBuffer()
+            self.updateTable()
+            return True
+        else:
+            return False
 
     def showPair(self) -> None:
         self.show_pair = not self.show_pair
@@ -86,24 +90,16 @@ class ScreenerTable(Static):
         self.refresh_caller.stop()
         self.tableStats_caller.stop()
 
-    def hasWeight(self) -> bool:
-        """
-        check if the user can perform a "change pair" opperation
-        """
-        return self.worker.hasWeightFor(RequestType.STATS, user=True)
-
     def updateTableStats(self) -> None:
         """update the labels above the table"""
 
-        """
-        Since this function is invoked every second,
-        it's worth checking whether the worker has faced any connectivity problems
-        """
+        # check if the worker encountered any connection errors
         if self.worker.kill:
-            self.stop()
-            self.app.exit("Connection problem ,check your internet, aborting...")
+            self.post_message(
+                ShutdownMsg("Connection problem ,check your internet, aborting...")
+            )
 
-        if not self.hasWeight():
+        if not self.worker.hasWeightFor(RequestType.STATS, user=True):
             self.query_one("#eta_label", Label).styles.margin = (0, 0)
             self.query_one("#warning_label", Label).styles.margin = (0, 0, 1, 0)
             self.query_one("#warning_label", Label).update(
@@ -197,7 +193,7 @@ class ScreenerTable(Static):
         data_order = [str(k[0]) for k in pairs]
         table_order = [k.value for k in self.table.rows.keys()]
 
-        # clear and add rows on sort diff
+        # reinitialize the rows on sort diff
         if data_order != table_order:
             self.table.clear()
             for pair in pairs:
@@ -210,7 +206,7 @@ class ScreenerTable(Static):
                 self.table.update_cell(row_k, col_k, data)
 
     def initTable(self):
-        """initialize an empty DataTable"""
+        """fill an empty DataTable"""
         self.col_keys = self.table.add_columns(
             *[
                 "Pair" if self.show_pair else "Asset",

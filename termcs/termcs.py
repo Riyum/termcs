@@ -2,6 +2,7 @@ from textual.app import App
 from typing import Union
 
 from .screener import Screener
+from .utils import ShutdownMsg
 
 
 class Termcs(App[Union[str, None]]):
@@ -12,6 +13,11 @@ class Termcs(App[Union[str, None]]):
 
     def on_mount(self) -> None:
         self.push_screen("screener")
+
+    def on_shutdown_msg(self, message: ShutdownMsg):
+        for screen in self.SCREENS.values():
+            screen.shutdown()
+        self.exit(message.exit_msg)
 
 
 def run():
