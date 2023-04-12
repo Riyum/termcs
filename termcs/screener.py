@@ -63,6 +63,3 @@ class Screener(Screen):
 
     def on_input_changed(self, message: Input.Changed) -> None:
         self.query_one(CryptoTable).search_pattern = message.value
-
-    def refreshTable(self):
-        self.query_one(CryptoTable)._update()

@@ -43,6 +43,7 @@ class CryptoTable(Static):
         self.updateTableStats()
         self.tableStats_caller = RepeatedTimer(1, self.updateTableStats)
         self.worker_caller = RepeatedTimer(3, self.fillWorkerBuffer)
+        self.table_updat_caller = RepeatedTimer(1, self.updateByThread)
         self.table.focus()
 
     def watch_search_pattern(self) -> None:
@@ -83,6 +84,7 @@ class CryptoTable(Static):
         self.active = False
         self.worker_caller.stop()
         self.tableStats_caller.stop()
+        self.table_updat_caller.stop()
 
     def hasWeight(self) -> bool:
         """
@@ -227,3 +229,6 @@ class CryptoTable(Static):
             self.initTable()
         else:
             self.updateTable()
+
+    def updateByThread(self):
+        self.app.call_from_thread(self._update)

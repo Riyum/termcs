@@ -1,6 +1,7 @@
 termcs/__pycache__
 termcs.egg-info/
 dist/
+_test/
 run.py
 compTest.py
 .projectile
