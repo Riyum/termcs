@@ -1,6 +1,23 @@
-from typing import Callable
+from typing import Callable, Union
 from threading import Timer
 from time import time
+from textual.message import Message
+
+
+def getChange(latest: float, ref: float) -> float:
+    """calculate price change"""
+    if latest - ref == 0:
+        return 0
+
+    return round((latest - ref) / ref * 100, 3)
+
+
+class ShutdownMsg(Message):
+    """shutdown message"""
+
+    def __init__(self, exit_msg: Union[None, str] = None) -> None:
+        self.exit_msg = exit_msg
+        super().__init__()
 
 
 class RepeatedTimer(object):

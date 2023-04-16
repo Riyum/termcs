@@ -2,7 +2,7 @@ from textual.app import App
 from typing import Union
 
 from .screener import Screener
-from .utils import RepeatedTimer
+from .utils import ShutdownMsg
 
 
 class Termcs(App[Union[str, None]]):
@@ -13,14 +13,11 @@ class Termcs(App[Union[str, None]]):
 
     def on_mount(self) -> None:
         self.push_screen("screener")
-        self.refresh_table_caller = RepeatedTimer(1, self.refreshTable)
 
-    def refreshTable(self) -> None:
-        self.call_from_thread(self.SCREENS["screener"].refreshTable)
-
-    async def action_quit(self) -> None:
-        self.refresh_table_caller.stop()
-        self.exit()
+    def on_shutdown_msg(self, message: ShutdownMsg):
+        for screen in self.SCREENS.values():
+            screen.shutdown()
+        self.exit(message.exit_msg)
 
 
 def run():

@@ -7,6 +7,8 @@ from typing import Any, Callable, List, Dict
 from binance.spot import Spot
 from requests.exceptions import ConnectionError, ReadTimeout
 
+from .utils import getChange
+
 ###### API Weight constrains
 # https://binance-docs.github.io/apidocs/spot/en/#limits
 
@@ -26,10 +28,10 @@ WEIGHT_LIMIT = 1200 - TIME_WEIGHT * TIME_REQ_PER_MINUTE
 ######
 
 
-class Pair(Enum):
-    BUSD = auto()
-    USDT = auto()
-    BOTH = auto()
+class QuoteCurrency(Enum):
+    BUSD = "busd"
+    USDT = "usdt"
+    BOTH = "both"
 
 
 class RequestType(Enum):
@@ -39,13 +41,7 @@ class RequestType(Enum):
 
 
 def request_wrapper(r_type: RequestType) -> Any:
-    """
-    Deal (violently) with connection problems and monitor API weight status
-    TIME requests will always happen hence the subtraction of MONITOR_WEIGHT from the base limit,
-    other requests depend on hasWeightFor answer
-
-    https://realpython.com/primer-on-python-decorators/#decorators-with-arguments
-    """
+    """Deal (violently) with connection problems and monitor API weight status"""
 
     def decorator_request_wrapper(func: Callable) -> Any:
         @wraps(func)
@@ -60,8 +56,8 @@ def request_wrapper(r_type: RequestType) -> Any:
                 return res["data"]
             except (ConnectionError, ReadTimeout):
                 """
-                since calling app.exit do not terminates the app instantly
-                an empty list is returned to avoid NoneType exceptions
+                To prevent the occurrence of NoneType exceptions, an empty list
+                is returned as calling app.exit does not immediately terminate the app
                 """
                 self.kill = True
                 return []
@@ -86,14 +82,13 @@ class Worker:
         )
         self.client = Spot(timeout=3, show_limit_usage=True)
         self.kill = False
-        self.stats_update = False
         self.update_time = 0
         self.used_weight = 0
-        self.pair = Pair.BOTH
+        self.quote_cur = QuoteCurrency.BOTH
         self.buff = {}
-        self.nan = []
+        self.nan = set()
         self.prepBuff()
-        self.asset_count = len(self.buff)
+        self.pair_count = len(self.buff)
 
     @request_wrapper(RequestType.PRICE)
     def fetchPrices(self) -> List:
@@ -108,28 +103,17 @@ class Worker:
         """calling the cheapest request just to grab the weight usage"""
         return self.client.time()
 
-    def getChange(self, latest: float, ref: float) -> float:
-        """calculate price change"""
-        if latest - ref == 0:
-            return 0
-
-        return round((latest - ref) / ref * 100, 3)
-
     def resetBuff(self) -> None:
         self.buff.clear()
 
     def sortBuff(self, key: str = "change24", rev=True) -> None:
-        """sort the assets in the buffer"""
+        """sort the pairs in the buffer"""
         self.buff = {
             k: v
             for k, v in sorted(
                 self.buff.items(), key=lambda asset: asset[1][key], reverse=rev
             )
         }
-
-    def getAssets(self) -> List[Dict]:
-        """return a list of the assets"""
-        return list(self.buff.values())
 
     def hasWeightFor(self, r_type: RequestType, user=False) -> bool:
         """return true if the request can be made according to the used weight"""
@@ -145,132 +129,131 @@ class Worker:
 
         return False
 
-    def setPair(self, p: Pair) -> None:
+    def setQuoteCurrency(self, qc: QuoteCurrency) -> bool:
 
-        if not self.hasWeightFor(RequestType.STATS):
-            return
+        if not self.hasWeightFor(RequestType.STATS, True):
+            return False
 
-        self.pair = p
-        if p == Pair.BUSD:
-            self.pattern = re.compile(
-                "^(?![A-Z]+(UP|DOWN|BULL|BEAR)(BUSD))([A-Z]+(BUSD)$)"
-            )
-        elif p == Pair.USDT:
-            self.pattern = re.compile(
-                "^(?![A-Z]+(UP|DOWN|BULL|BEAR)(USDT))([A-Z]+(USDT)$)"
-            )
-        elif p == Pair.BOTH:
-            self.pattern = re.compile(
-                "^(?![A-Z]+(UP|DOWN|BULL|BEAR)(USDT|BUSD))([A-Z]+(USDT|BUSD)$)"
-            )
+        try:
+            self.quote_cur = QuoteCurrency(qc)
+        except ValueError:
+            self.quote_cur = QuoteCurrency.BOTH
 
+        if self.quote_cur == QuoteCurrency.BUSD:
+            p = "^(?![A-Z]+(UP|DOWN|BULL|BEAR)(BUSD))([A-Z]+(BUSD)$)"
+        elif self.quote_cur == QuoteCurrency.USDT:
+            p = "^(?![A-Z]+(UP|DOWN|BULL|BEAR)(USDT))([A-Z]+(USDT)$)"
+        else:
+            p = "^(?![A-Z]+(UP|DOWN|BULL|BEAR)(USDT|BUSD))([A-Z]+(USDT|BUSD)$)"
+
+        self.pattern = re.compile(p)
         self.resetBuff()
         self.prepBuff()
+        return True
 
     def prepBuff(self) -> None:
         """
         called if self.pattern changed to both usdt & busd
-        self.buff will contain the pair with the highest volume
+        self.buff will contain the pair with the higher volume
         """
-        if self.pair != Pair.BOTH:
+        if self.quote_cur != QuoteCurrency.BOTH:
             return
 
         tickers = self.fetchStats()
         self.update_time = time() + self.thresh
 
-        tmp = set()
+        for pair in tickers:
 
-        for asset in tickers:
-
-            sym = asset["symbol"]
-            name = asset["symbol"][:-4]
-            vol = int(float(asset["volume"]))
+            sym = pair["symbol"]
+            vol = int(float(pair["volume"]))
 
             if not self.pattern.search(sym):
                 continue
 
             if vol == 0:
-                self.nan.append(sym)
+                self.nan.add(sym)
                 continue
 
-            if name in tmp:
-                suffix = asset["symbol"][-4:]
-                k = f"{name}USDT" if suffix == "BUSD" else f"{name}BUSD"
-                vol_b = self.buff[k]["volume"]
+            base_cur = pair["symbol"][:-4]
+            quote_cur = pair["symbol"][-4:]
 
-                if vol > vol_b:
-                    self.buff[sym] = self.buff.pop(k)
-                    self.addAssetToBuff(asset)
+            if base_cur in self.buff:
+                if quote_cur != self.buff[base_cur]["quote_cur"]:
+                    if vol > self.buff[base_cur]["volume"]:
+                        self.addPairToBuff(pair)
+                    continue
             else:
-                tmp.add(name)
-                self.addAssetToBuff(asset)
+                self.addPairToBuff(pair)
 
-    def addAssetToBuff(self, asset: Dict) -> None:
-        """add/update asset data"""
-        sym = asset["symbol"]
-        vol = int(float(asset["volume"]))
+    def addPairToBuff(self, pair: Dict) -> None:
+        """add/update pair data"""
+
+        sym = pair["symbol"]
+        vol = int(float(pair["volume"]))
 
         if vol == 0:
-            self.nan.append(sym)
+            self.nan.add(sym)
             return
 
-        price = float(asset["lastPrice"])
-        low = float(asset["lowPrice"])
-        high = float(asset["highPrice"])
+        base_cur = pair["symbol"][:-4]
+        price = float(pair["lastPrice"])
+        low = float(pair["lowPrice"])
+        high = float(pair["highPrice"])
 
-        self.buff[sym] = {
-            "symbol": sym,
-            "asset_name": asset["symbol"][:-4],
+        self.buff[base_cur] = {
+            "quote_cur": pair["symbol"][-4:],
             "price": price,
-            "change24": float(asset["priceChangePercent"]),
+            "change24": float(pair["priceChangePercent"]),
             "high": high,
             "low": low,
-            "high_change": self.getChange(price, high),
-            "low_change": self.getChange(price, low),
+            "high_change": getChange(price, high),
+            "low_change": getChange(price, low),
             "volume": vol,
         }
 
     def updateLatestPrices(self, table: List[Dict]) -> None:
         """update latest prices & high/low change"""
-        for asset in table:
+        for pair in table:
 
-            sym = asset["symbol"]
+            sym = pair["symbol"]
+            base_cur = pair["symbol"][:-4]
 
             if self.pattern.search(sym) and sym not in self.nan:
                 try:
-                    self.buff[sym]["price"] = float(asset["price"])
-                    self.buff[sym]["low_change"] = self.getChange(
-                        self.buff[sym]["price"], self.buff[sym]["low"]
+                    self.buff[base_cur]["price"] = float(pair["price"])
+                    self.buff[base_cur]["low_change"] = getChange(
+                        self.buff[base_cur]["price"], self.buff[base_cur]["low"]
                     )
-                    self.buff[sym]["high_change"] = self.getChange(
-                        self.buff[sym]["price"], self.buff[sym]["high"]
+                    self.buff[base_cur]["high_change"] = getChange(
+                        self.buff[base_cur]["price"], self.buff[base_cur]["high"]
                     )
                 except KeyError:
                     pass
 
     def addTickers(self, tickers: List[Dict]) -> None:
         """add/update 24H stats"""
-        for asset in tickers:
+        for pair in tickers:
 
-            sym = asset["symbol"]
+            sym = pair["symbol"]
+            base_cur = pair["symbol"][:-4]
 
             if self.pattern.search(sym) and sym not in self.nan:
 
-                price = float(asset["lastPrice"])
-                low = float(asset["lowPrice"])
-                high = float(asset["highPrice"])
+                price = float(pair["lastPrice"])
+                low = float(pair["lowPrice"])
+                high = float(pair["highPrice"])
 
                 try:
-                    self.buff[sym]["price"] = price
-                    self.buff[sym]["change24"] = float(asset["priceChangePercent"])
-                    self.buff[sym]["low"] = low
-                    self.buff[sym]["high"] = high
-                    self.buff[sym]["volume"] = int(float(asset["volume"]))
-                    self.buff[sym]["low_change"] = self.getChange(price, low)
-                    self.buff[sym]["high_change"] = self.getChange(price, high)
+                    self.buff[base_cur]["price"] = price
+                    self.buff[base_cur]["change24"] = float(pair["priceChangePercent"])
+                    self.buff[base_cur]["low"] = low
+                    self.buff[base_cur]["high"] = high
+                    self.buff[base_cur]["volume"] = int(float(pair["volume"]))
+                    self.buff[base_cur]["low_change"] = getChange(price, low)
+                    self.buff[base_cur]["high_change"] = getChange(price, high)
                 except KeyError:
-                    if self.pair != Pair.BOTH:
-                        self.addAssetToBuff(asset)
+                    if self.quote_cur != QuoteCurrency.BOTH:
+                        self.addPairToBuff(pair)
 
     def fetchAll(self) -> None:
 
@@ -281,14 +264,12 @@ class Worker:
 
         tickers = []
         prices = []
-        self.stats_update = False
 
         self.fetchWeightStatus()
 
         if self.update_time - time() < 0 or len(self.buff) == 0:
             tickers = self.fetchStats()
             self.update_time = time() + self.thresh
-            self.stats_update = True
 
         if tickers:
             self.addTickers(tickers)
@@ -296,4 +277,4 @@ class Worker:
             prices = self.fetchPrices()
             self.updateLatestPrices(prices)
 
-        self.asset_count = len(self.buff)
+        self.pair_count = len(self.buff)

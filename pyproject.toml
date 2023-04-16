@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "termcs"
-version = "0.1.0"
+version = "0.1.1"
 authors = [{ name="Riyum" }]
 description = "Terminal crypto screener"
 requires-python = ">=3.7"
@@ -23,7 +23,7 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     ]
 dependencies = [
-    "textual >= 0.15.0",
+    "textual >= 0.19.1",
     "binance-connector",
 ]
 
