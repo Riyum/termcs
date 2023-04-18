@@ -6,8 +6,7 @@ from textual.app import ComposeResult
 from textual.containers import Container
 from textual.reactive import reactive
 from textual.widget import Widget
-from textual.binding import Binding
-from textual.widgets import Button, Footer, Input
+from textual.widgets import Footer, Input
 
 
 class MyFooter(Footer):
@@ -39,7 +38,7 @@ class MyFooter(Footer):
         self._active_keys = arg
 
     def watch__active_keys(self, _active_keys: dict) -> None:
-        self._key_text = self.make_key_text()
+        self._key_text = self._make_key_text()
 
     def toggleKey(self, key: str) -> None:
         """active key setter & force watch call"""
@@ -60,7 +59,7 @@ class MyFooter(Footer):
         """textual issue #1098, Assign the reactive to itself to force a watch_"""
         self.active_keys = self.active_keys
 
-    def make_key_text(self) -> Text:
+    def _make_key_text(self) -> Text:
         """Create text containing all the keys."""
         base_style = self.rich_style
         text = Text(
