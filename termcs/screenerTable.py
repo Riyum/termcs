@@ -5,7 +5,7 @@ from typing import List
 
 from rich.text import Text
 from textual.app import ComposeResult
-from textual.containers import Horizontal, Vertical
+from textual.containers import Container
 from textual.message import Message
 from textual.reactive import reactive
 from textual.widgets import DataTable, Label, Static
@@ -33,10 +33,13 @@ class ScreenerTable(Static):
         self.lock = Lock()
 
     def compose(self) -> ComposeResult:
-        yield Vertical(Label("", id="pair_count_label"), classes="screener_label")
-        yield Vertical(Label("", id="eta_label"), classes="screener_label")
-        yield Vertical(Label("", id="warning_label"), classes="screener_label")
-        yield Horizontal(self.table, id="table")
+        yield Container(
+            Label("", id="pair_count_label"),
+            Label("", id="eta_label"),
+            Label("", id="warning_label"),
+            id="screener_labels",
+        )
+        yield Container(self.table, id="table")
 
     def on_mount(self) -> None:
         self.fillWorkerBuffer()

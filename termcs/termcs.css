@@ -37,7 +37,7 @@ Clock {
 
 /* ----------- CryptoTable Labels ----------- */
 
-.screener_label {
+#screener_labels {
     height: auto;
     align: center top;
 }
@@ -51,9 +51,9 @@ Clock {
 }
 
 #table {
+    align: center top;
     width: 100%;
     height: 100%;
-    align: center top;
     /* border: round yellow; */
 }
 

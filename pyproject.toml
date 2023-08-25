@@ -4,10 +4,10 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "termcs"
-version = "0.1.2"
+version = "0.1.3"
 authors = [{ name="Riyum" }]
 description = "Terminal crypto screener"
-requires-python = ">=3.7"
+requires-python = ">=3.7.7"
 readme = "README.md"
 license = {file = 'LICENSE'}
 classifiers = [
@@ -24,7 +24,7 @@ classifiers = [
     ]
 dependencies = [
     "textual >= 0.19.1",
-    "binance-connector",
+    "requests",
 ]
 
 [tool.setuptools]

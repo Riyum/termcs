@@ -4,7 +4,7 @@ from functools import wraps
 from time import time
 from typing import Any, Callable, List, Dict
 
-from binance.spot import Spot
+import requests
 from requests.exceptions import ConnectionError, ReadTimeout
 
 from .utils import getChange
@@ -14,17 +14,15 @@ from .utils import getChange
 
 STATS_REQ_PER_MINUTE = 1
 PRICE_REQ_PER_MINUTE = round(60 / 3)
-TIME_REQ_PER_MINUTE = round(60 / 3)
 
-TIME_WEIGHT = 1
-PRICE_WEIGHT = 2
-STATS_WEIGHT = 40
+PRICE_WEIGHT = 4
+STATS_WEIGHT = 80
 
 TERMCS_WEIGHT = (
     STATS_WEIGHT * STATS_REQ_PER_MINUTE + PRICE_WEIGHT * PRICE_REQ_PER_MINUTE
 )
 
-WEIGHT_LIMIT = 1200 - TIME_WEIGHT * TIME_REQ_PER_MINUTE
+WEIGHT_LIMIT = 6000
 ######
 
 
@@ -46,14 +44,16 @@ def request_wrapper(r_type: RequestType) -> Any:
     def decorator_request_wrapper(func: Callable) -> Any:
         @wraps(func)
         def fetch(self) -> List:
+            url = func(self)
             try:
-                if r_type == RequestType.TIME or self.hasWeightFor(r_type):
-                    res = func(self)
-                    self.used_weight = int(res["limit_usage"]["x-mbx-used-weight"])
+                if self.hasWeightFor(r_type):
+                    res = requests.get(url)
+                    self.used_weight = int(res.headers["x-mbx-used-weight"])
                 else:
-                    res = {"data": []}
+                    return []
 
-                return res["data"]
+                return res.json()
+
             except (ConnectionError, ReadTimeout):
                 """
                 To prevent the occurrence of NoneType exceptions, an empty list
@@ -80,7 +80,6 @@ class Worker:
         self.pattern = re.compile(
             "^(?![A-Z]+(UP|DOWN|BULL|BEAR)(USDT|BUSD))([A-Z]+(USDT|BUSD)$)"
         )
-        self.client = Spot(timeout=3, show_limit_usage=True)
         self.kill = False
         self.update_time = 0
         self.used_weight = 0
@@ -91,17 +90,12 @@ class Worker:
         self.pair_count = len(self.buff)
 
     @request_wrapper(RequestType.PRICE)
-    def fetchPrices(self) -> List:
-        return self.client.ticker_price()
+    def fetchPrices(self) -> str:
+        return "https://api.binance.com/api/v3/ticker/price"
 
     @request_wrapper(RequestType.STATS)
-    def fetchStats(self) -> List:
-        return self.client.ticker_24hr()
-
-    @request_wrapper(RequestType.TIME)
-    def fetchWeightStatus(self) -> List:
-        """calling the cheapest request just to grab the weight usage"""
-        return self.client.time()
+    def fetchStats(self) -> str:
+        return "https://api.binance.com/api/v3/ticker/24hr"
 
     def resetBuff(self) -> None:
         self.buff.clear()
@@ -264,8 +258,6 @@ class Worker:
 
         tickers = []
         prices = []
-
-        self.fetchWeightStatus()
 
         if self.update_time - time() < 0 or len(self.buff) == 0:
             tickers = self.fetchStats()
