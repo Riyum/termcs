@@ -135,7 +135,6 @@ A: There is a limit of (approx) 27 times you can press the `b` / `t` / `o` keys 
 This software uses the following open source packages:
 
 - [Textual](https://github.com/Textualize/textual)
-- [Binance-connector](https://github.com/binance/binance-connector-python)
 
 ## License
 
