@@ -1,5 +1,4 @@
 import re
-from threading import Lock
 from time import time
 from typing import List
 
@@ -27,10 +26,10 @@ class ScreenerTable(Static):
     def __init__(self) -> None:
         super().__init__()
         self.worker = Worker(thresh=60)
+        self.worker_thread = self.worker.getWorkerThread()
         self.table = DataTable(zebra_stripes=True, show_cursor=False)
         self.sort_key = lambda x: x[1]["change24"]  # sort by 24h price change
         self.rev = True
-        self.lock = Lock()
 
     def compose(self) -> ComposeResult:
         yield Container(
@@ -42,10 +41,10 @@ class ScreenerTable(Static):
         yield Container(self.table, id="table")
 
     def on_mount(self) -> None:
-        self.fillWorkerBuffer()
         self.initTable()
+        self.worker_thread.start()
         self.tableStats_caller = RepeatedTimer(1, self.updateTableStats)
-        self.refresh_caller = RepeatedTimer(3, self._refresh)
+        self.refresh_caller = RepeatedTimer(1, self._refresh)
         self.table.focus()
         self.updateTableStats()
 
@@ -63,13 +62,8 @@ class ScreenerTable(Static):
 
         self.updateTable()
 
-    def fillWorkerBuffer(self):
-        with self.lock:
-            self.worker.fetchAll()
-
-    def _refresh(self):
-        """fetch market data and fill the DataTable"""
-        self.fillWorkerBuffer()
+    def _refresh(self) -> None:
+        """updateTable wrapper to be called by a thread"""
         self.app.call_from_thread(self.updateTable)
 
     def fullTable(self) -> None:
@@ -78,7 +72,6 @@ class ScreenerTable(Static):
 
     def setQuoteCurrency(self, qc: QuoteCurrency) -> bool:
         if self.worker.setQuoteCurrency(qc):
-            self.fillWorkerBuffer()
             self.updateTable()
             return True
         else:
@@ -92,12 +85,13 @@ class ScreenerTable(Static):
     def stop(self) -> None:
         self.refresh_caller.stop()
         self.tableStats_caller.stop()
+        self.worker.stop = True
 
     def updateTableStats(self) -> None:
         """update the labels above the table"""
 
         # check if the worker encountered any connection errors
-        if self.worker.kill:
+        if self.worker.stop:
             self.post_message(
                 ShutdownMsg("Connection problem ,check your internet, aborting...")
             )
@@ -126,13 +120,12 @@ class ScreenerTable(Static):
         """sort, filter and decorate the pairs data, return a list of DataTable rows"""
 
         # get a sorted list of the current pairs
-        with self.lock:
-            pairs = [
-                [base_cur, data]
-                for base_cur, data in sorted(
-                    self.worker.buff.items(), key=self.sort_key, reverse=self.rev
-                )
-            ]
+        pairs = [
+            [base_cur, data]
+            for base_cur, data in sorted(
+                self.worker.buff.items(), key=self.sort_key, reverse=self.rev
+            )
+        ]
 
         # full / mini table
         pairs = pairs if self.full_table else [*pairs[:15], *pairs[-15:]]
@@ -190,7 +183,7 @@ class ScreenerTable(Static):
 
         return rows
 
-    def updateTable(self):
+    def updateTable(self) -> None:
         """update the DataTable with new data"""
         pairs = self.prepTableData()
         data_order = [str(k[0]) for k in pairs]
@@ -208,7 +201,7 @@ class ScreenerTable(Static):
             for data, col_k in zip(pair[1:], list(self.table.columns.keys())[1:]):
                 self.table.update_cell(row_k, col_k, data)
 
-    def initTable(self):
+    def initTable(self) -> None:
         """fill an empty DataTable"""
         self.col_keys = self.table.add_columns(
             *[

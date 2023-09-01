@@ -47,9 +47,9 @@
 ## Features
 
 * Price and 24H statistics updates for all BUSD/USDT pairs at Binance
-  - Choose to show BUSD or USDT or both pairs
-  - Price update every 3 seconds
+  - Real-time price
   - Statistics update every 60 seconds
+  - Choose to show BUSD or USDT or both pairs
   - UP/DOWN/BEAR/BULL pairs are excluded from the table
 * Search the table with regex compatible patterns
 * Full/mini table mode
@@ -62,7 +62,7 @@
 
 ## Requirements
 
-* `python 3.7+`
+* `python 3.7.7+`
 
 ## Install
 
@@ -85,7 +85,7 @@ To sort the table, simply click on the column header
 ### Keybindings
 
 * `f` - Full/mini table
-* `/` - Search
+* `/` - Search (by base asset name)
 * `Esc` - Exit search mode
 * `q` - Quit back to the terminal 
 
@@ -94,29 +94,25 @@ To sort the table, simply click on the column header
 * `b` - Show BUSD pairs only
 * `t` - Show USDT pairs only
 * `o` - Show both pairs
-* `p` - Show/hide pair name
+* `p` - Show/hide quote asset name
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
 ## Table notation
 
-| Column        | Description                                                                         |
-| ------------- | -------------                                                                       |
-| Price         | Current price (USD)                                                                 |
-| Change        | The difference between the current price and the price 24 hours ago (percentage)    |
-| High          | Highest price for the last 24 hours (USD)                                           |
-| Low           | Lowest price for the last 24 hours (USD)                                            |
-| High Change   | The difference between the current price and the highest 24 hour price (percentage) |
-| Low Change    | The difference between the current price and the lowest 24 hour price (percentage)  |
-| Volume        | Asset volume for the last 24 hours                                                  |
+| Column      | Description                                                                         |
+|-------------|-------------------------------------------------------------------------------------|
+| Price       | Current price (USD)                                                                 |
+| Change      | The difference between the current price and the price 24 hours ago (percentage)    |
+| High        | Highest price for the last 24 hours (USD)                                           |
+| Low         | Lowest price for the last 24 hours (USD)                                            |
+| High Change | The difference between the current price and the highest 24 hour price (percentage) |
+| Low Change  | The difference between the current price and the lowest 24 hour price (percentage)  |
+| Volume      | Trading pair volume for the last 24 hours                                           |
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
 ## FAQ
-
-#### Q: What's the deal with the update count down ? 
-
-A: An update its when Termcs grabs 24H statistics from Binance and updates the following columns: *Change*, *High*, *Low* & *Volume*.
 
 #### Q: What's determine the asset pair when both pairs are presented in the table ?
 
@@ -134,7 +130,9 @@ A: There is a limit of (approx) 27 times you can press the `b` / `t` / `o` keys 
 
 This software uses the following open source packages:
 
-- [Textual](https://github.com/Textualize/textual)
+- [textual](https://github.com/Textualize/textual)
+- [requests](https://github.com/psf/requests)
+- [websockets](https://github.com/python-websockets/websockets)
 
 ## License
 
